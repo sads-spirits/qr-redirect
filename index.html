@@ -1,13 +1,117 @@
-<!DOCTYPE html>
-
 <!--meta http-equiv="refresh" content="0; url=https://www.ticketsource.co.uk/sads"-->
 
-<script>
-  fetch('https://docs.google.com/spreadsheets/d/1Aq5vYdDrosd1aYTNKMSP25jBqW7odBRknYdcKiIxIc0/edit?usp=sharing')
-    .then(response => response.text())
-    .then(data => {
-      const url = data.trim(); // Extract URL from CSV
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirect Debugger</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .status { margin: 15px 0; padding: 10px; border-left: 4px solid #0066cc; background: #e6f0ff; }
+    .error { border-left-color: #cc0000; background: #ffe6e6; }
+    .url { word-break: break-all; padding: 8px; background: #f8f8f8; margin: 10px 0; }
+    button { padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0052a3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Redirect Debugger</h1>
+    
+    <div id="fetchStatus" class="status">
+      ▶️ Fetching redirect URL from Google Sheet...
+    </div>
+    
+    <div id="fetchedUrl" class="url" style="display:none;">
+      <strong>Received URL:</strong><br>
+      <span id="urlContent"></span>
+    </div>
+    
+    <div id="redirectCountdown" style="display:none; margin-top: 20px;">
+      Redirecting in <span id="countdown">5</span> seconds...
+      <button onclick="proceedNow()">Redirect NOW →</button>
+    </div>
+    
+    <div id="errorBox" class="status error" style="display:none;">
+      ❌ <strong>Error:</strong> <span id="errorMessage"></span>
+    </div>
+  </div>
+
+  <script>
+    // CONFIG: REPLACE THIS WITH YOUR ACTUAL PUBLISHED SHEET CSV LINK
+    const SHEET_CSV_URL = 'YOUR_SHEET_CSV_LINK';
+    
+    const statusEl = document.getElementById('fetchStatus');
+    const urlEl = document.getElementById('fetchedUrl');
+    const urlContentEl = document.getElementById('urlContent');
+    const countdownEl = document.getElementById('countdown');
+    const redirectBoxEl = document.getElementById('redirectCountdown');
+    const errorEl = document.getElementById('errorBox');
+    const errorMsgEl = document.getElementById('errorMessage');
+
+    // Fetch and debug
+    fetch(SHEET_CSV_URL)
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.text();
+      })
+      .then(csvData => {
+        statusEl.innerHTML = '✅ Successfully fetched data!';
+        
+        // SHOW RAW CSV (critical for debugging)
+        const rawPreview = document.createElement('div');
+        rawPreview.innerHTML = `<strong>Raw CSV response:</strong><br><pre style="background:#f5f5f5;padding:10px;margin:10px 0;">${escapeHTML(csvData)}</pre>`;
+        statusEl.appendChild(rawPreview);
+        
+        // Extract URL (handles Sheets' header row)
+        const lines = csvData.trim().split('\n');
+        const url = lines.length > 1 
+          ? lines[1].trim()  // Skip header row (line 0)
+          : lines[0].trim(); // Fallback if no header
+        
+        if (!url || !url.startsWith('http')) {
+          throw new Error(`Invalid URL format: "${url}"`);
+        }
+        
+        // Display and prepare redirect
+        urlContentEl.textContent = url;
+        urlEl.style.display = 'block';
+        redirectBoxEl.style.display = 'block';
+        
+        // Start countdown
+        let seconds = 5;
+        const timer = setInterval(() => {
+          countdownEl.textContent = seconds--;
+          if (seconds < 0) {
+            clearInterval(timer);
+            window.location.href = url;
+          }
+        }, 1000);
+      })
+      .catch(error => {
+        const errorMsg = error.message || String(error);
+        errorMsgEl.textContent = errorMsg;
+        errorEl.style.display = 'block';
+        statusEl.innerHTML = '❌ Fetch failed - check console for details';
+        console.error('REDIRECT DEBUG ERROR:', error);
+      });
+
+    function proceedNow() {
+      const url = document.getElementById('urlContent').textContent;
       window.location.href = url;
-    })
-    .catch(error => console.error("Redirect failed:", error));
-</script>
+    }
+
+    // Prevent HTML injection in raw preview
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag]));
+    }
+  </script>
+</body>
+</html>
