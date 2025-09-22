@@ -20,8 +20,13 @@
       ▶️ Fetching redirect URL from Google Sheet...
     </div>
 
+    <div id="sheetData" class="url" style="display:none;">
+      <strong>Raw Sheet Data:</strong><br>
+      <span id="sheetContent"></span>
+    </div>
+
     <div id="fetchedUrl" class="url" style="display:none;">
-      <strong>Received URL:</strong><br>
+      <strong>Cell A1 Content:</strong><br>
       <span id="urlContent"></span>
     </div>
 
@@ -36,10 +41,12 @@
   </div>
 
   <script>
-    // CONFIG: REPLACE THIS WITH YOUR ACTUAL PUBLISHED SHEET CSV LINK
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1Aq5vYdDrosd1aYTNKMSP25jBqW7odBRknYdcKiIxIc0/edit?usp=sharing';
-
+    // USE THIS FORMAT FOR CSV EXPORT (NOT THE EDIT URL)
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/[YOUR_SHEET_ID]/pub?gid=0&single=true&output=csv';
+    
     const statusEl = document.getElementById('fetchStatus');
+    const sheetDataEl = document.getElementById('sheetData');
+    const sheetContentEl = document.getElementById('sheetContent');
     const urlEl = document.getElementById('fetchedUrl');
     const urlContentEl = document.getElementById('urlContent');
     const countdownEl = document.getElementById('countdown');
@@ -54,38 +61,38 @@
         return response.text();
       })
       .then(csvData => {
-        statusEl.innerHTML = '✅ Successfully fetched data!';
-
-        // Log the raw CSV data to the console
-        console.log('Raw CSV data from Google Sheet:', csvData);
-
-        // SHOW RAW CSV (critical for debugging)
-        const rawPreview = document.createElement('div');
-        rawPreview.innerHTML = `<strong>Raw CSV response:</strong><br><pre style="background:#f5f5f5;padding:10px;margin:10px 0;">${escapeHTML(csvData)}</pre>`;
-        statusEl.appendChild(rawPreview);
-
-        // Extract URL (handles Sheets' header row)
-        const lines = csvData.trim().split('\n');
-        const url = lines.length > 1
-          ? lines[1].trim()  // Skip header row (line 0)
-          : lines[0].trim(); // Fallback if no header
-
-        if (!url || !url.startsWith('http')) {
-          throw new Error(`Invalid URL format: "${url}"`);
+        statusEl.innerHTML = '✅ Successfully fetched CSV data!';
+        
+        // Display raw sheet data
+        sheetContentEl.textContent = csvData;
+        sheetDataEl.style.display = 'block';
+        
+        // Parse CSV to get cell A1 (first cell of first row)
+        const rows = csvData.trim().split('\n');
+        if (rows.length === 0) throw new Error("No data in sheet");
+        
+        const firstRow = rows[0];
+        const cells = firstRow.split(',');
+        
+        // Get cell A1 (first cell)
+        const cellA1 = cells[0].trim();
+        
+        if (!cellA1 || !cellA1.startsWith('http')) {
+          throw new Error(`Invalid URL format in A1: "${cellA1}"`);
         }
-
+        
         // Display and prepare redirect
-        urlContentEl.textContent = url;
+        urlContentEl.textContent = cellA1;
         urlEl.style.display = 'block';
         redirectBoxEl.style.display = 'block';
-
+        
         // Start countdown
         let seconds = 5;
         const timer = setInterval(() => {
           countdownEl.textContent = seconds--;
           if (seconds < 0) {
             clearInterval(timer);
-            window.location.href = url;
+            window.location.href = cellA1;
           }
         }, 1000);
       })
@@ -93,7 +100,7 @@
         const errorMsg = error.message || String(error);
         errorMsgEl.textContent = errorMsg;
         errorEl.style.display = 'block';
-        statusEl.innerHTML = '❌ Fetch failed - check console for details';
+        statusEl.innerHTML = '❌ Fetch failed - check details below';
         console.error('REDIRECT DEBUG ERROR:', error);
       });
 
@@ -102,7 +109,6 @@
       window.location.href = url;
     }
 
-    // Prevent HTML injection in raw preview
     function escapeHTML(str) {
       return str.replace(/[&<>'"]/g,
         tag => ({
