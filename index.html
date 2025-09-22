@@ -56,6 +56,9 @@
       .then(csvData => {
         statusEl.innerHTML = '✅ Successfully fetched data!';
 
+        // Log the raw CSV data to the console
+        console.log('Raw CSV data from Google Sheet:', csvData);
+
         // SHOW RAW CSV (critical for debugging)
         const rawPreview = document.createElement('div');
         rawPreview.innerHTML = `<strong>Raw CSV response:</strong><br><pre style="background:#f5f5f5;padding:10px;margin:10px 0;">${escapeHTML(csvData)}</pre>`;
