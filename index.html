@@ -1,2 +1,13 @@
 <!DOCTYPE html>
-<meta http-equiv="refresh" content="0; url=https://www.ticketsource.co.uk/sads">
+
+<!--meta http-equiv="refresh" content="0; url=https://www.ticketsource.co.uk/sads"-->
+
+<script>
+  fetch('https://docs.google.com/spreadsheets/d/1Aq5vYdDrosd1aYTNKMSP25jBqW7odBRknYdcKiIxIc0/edit?usp=sharing')
+    .then(response => response.text())
+    .then(data => {
+      const url = data.trim(); // Extract URL from CSV
+      window.location.href = url;
+    })
+    .catch(error => console.error("Redirect failed:", error));
+</script>
