@@ -61,7 +61,7 @@
         return response.text();
       })
       .then(csvData => {
-        statusEl.innerHTML = '✅ <span id="sheetContent"></span>';
+        statusEl.innerHTML = '✅ Done';
         
         // Display link data
         sheetContentEl.textContent = csvData;
@@ -122,6 +122,7 @@
   </script>
 </body>
 </html>
+
 
 
 
