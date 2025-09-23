@@ -21,7 +21,7 @@
     </div>
 
     <div id="sheetData" class="url" style="display:none;">
-      <strong>Raw Sheet Data:</strong><br>
+      <strong>Link:</strong><br>
       <span id="sheetContent"></span>
     </div>
 
@@ -31,7 +31,7 @@
     </div>
 
     <div id="redirectCountdown" style="display:none; margin-top: 20px;">
-      Redirecting in <span id="countdown">60</span> seconds...
+      Redirecting in <span id="countdown">5</span> seconds...
       <button onclick="proceedNow()">Redirect NOW →</button>
     </div>
 
@@ -63,9 +63,9 @@
       .then(csvData => {
         statusEl.innerHTML = '✅ <span id="sheetContent"></span>';
         
-        // Display raw sheet data
+        // Display link data
         sheetContentEl.textContent = csvData;
-        //sheetDataEl.style.display = 'block';
+        sheetDataEl.style.display = 'block';
         
         // Parse CSV to get cell A1 (first cell of first row)
         const rows = csvData.trim().split('\n');
@@ -122,6 +122,7 @@
   </script>
 </body>
 </html>
+
 
 
 
